@@ -23,8 +23,8 @@ This notebook includes:
 * Uses real-world metrics aggregated from Trino + S3 workload;
 
 # Requirements
-Python 3.10+
-Jupyter Notebook
-scikit-learn
+* Python 3.10+
+* Jupyter Notebook
+* scikit-learn
 
 See requirements.txt for full list of libraries.
