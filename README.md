@@ -1,4 +1,4 @@
-This repository is focused on detecting performance degradation in distributed data platforms, specifically in systems utilizing Trino and S3-compatible object storage. The project explores unsupervised machine learning methods to identify anomalous behavior in SQL execution metrics and system-level logs.
+This repository contains a project focused on detecting performance degradation in distributed data platforms, specifically in systems utilizing Trino and S3-compatible object storage. The project explores unsupervised machine learning methods to identify anomalous behavior in SQL execution metrics and system-level logs.
 
 # Repository Structure
 _1_data_preparation.ipynb_
