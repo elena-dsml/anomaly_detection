@@ -27,4 +27,4 @@ This notebook includes:
 * Jupyter Notebook
 * scikit-learn
 
-See requirements.txt for full list of libraries.
+See _requirements.txt_ for full list of libraries.
