@@ -45,3 +45,5 @@ Then, open your web browser and navigate to `http://localhost:8501`.
 
 See _requirements.txt_ for full list of libraries.
 
+
+![](https://komarev.com/ghpvc/?username=elena-dsml)
