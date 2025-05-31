@@ -28,3 +28,6 @@ This notebook includes:
 * scikit-learn
 
 See _requirements.txt_ for full list of libraries.
+
+
+![](https://komarev.com/ghpvc/?username=elena-dsml)
