@@ -22,6 +22,7 @@ It allows users to explore the data, view model predictions, and analyze anomali
 
 To build the application, start Docker app and in the repository root run the command in the terminal:
 ```bash
+cd streamlit-anomaly-app
 docker build -t streamlit-anomaly-app .
 ```
 To run the application, execute:
@@ -44,6 +45,7 @@ Then, open your web browser and navigate to `http://localhost:8501`.
 * streamlit
 
 See _requirements.txt_ for full list of libraries for running Jupyter Notebooks.
+
 See _streamlit-anomaly-app/requirements.txt_ for libraries required to run the Streamlit app.
 
 
