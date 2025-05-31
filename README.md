@@ -20,9 +20,9 @@ This notebook includes:
 This directory contains a Demo Streamlit web application that provides an interactive interface for visualizing the results of the anomaly detection models. 
 It allows users to explore the data, view model predictions, and analyze anomalies in a user-friendly manner.
 
-To build the application, start Docker app and run in the terminal:
+To build the application, start Docker app and in the repository root run the command in the terminal:
 ```bash
-docker build -t streamlit-anomaly-app
+docker build -t streamlit-anomaly-app .
 ```
 To run the application, execute:
 ```bash
@@ -43,7 +43,8 @@ Then, open your web browser and navigate to `http://localhost:8501`.
 * scikit-learn
 * streamlit
 
-See _requirements.txt_ for full list of libraries.
+See _requirements.txt_ for full list of libraries for running Jupyter Notebooks.
+See _streamlit-anomaly-app/requirements.txt_ for libraries required to run the Streamlit app.
 
 
 ![](https://komarev.com/ghpvc/?username=elena-dsml)

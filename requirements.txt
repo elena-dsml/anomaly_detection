@@ -1,12 +1,11 @@
 pandas
 numpy
-pyarrow
 scipy
 scikit-learn
 joblib
-streamlit
 utils
 catboost
 matplotlib
 seaborn
 plotly
+
