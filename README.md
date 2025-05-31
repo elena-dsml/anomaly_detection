@@ -1,7 +1,7 @@
 This repository contains a project focused on detecting performance degradation in distributed data platforms, specifically in systems utilizing Trino and S3-compatible object storage. The project explores unsupervised machine learning methods to identify anomalous behavior in SQL execution metrics and system-level logs.
 
 # Repository Structure
-_1_data_preparation.ipynb_
+_exploration/data_preparation.ipynb_
 This notebook contains the full preprocessing pipeline:
 * Loading and combining SQL query logs and system metrics;
 * Data cleaning, aggregation, and resampling;
@@ -9,12 +9,27 @@ This notebook contains the full preprocessing pipeline:
 * Data visualization and exploratory data analysis (EDA);
 * Feature Engineering.
 
-_2_modeling_and_evaluation.ipynb_
+_exploration/modeling_and_evaluation.ipynb_
 This notebook includes:
 * Application of unsupervised clustering techniques (KMeans, DBSCAN, GMM, Birch, Agglomerative Clustering);
 * Application of classification models (SVM, Random Forest, Catboost);
 * Model comparison using silhouette score, F1-score, and visual interpretation;
 * Performance evaluation.
+
+## streamlit-anomaly-app
+This directory contains a Demo Streamlit web application that provides an interactive interface for visualizing the results of the anomaly detection models. 
+It allows users to explore the data, view model predictions, and analyze anomalies in a user-friendly manner.
+
+To build the application, start Docker app and run in the terminal:
+```bash
+docker build -t streamlit-anomaly-app
+```
+To run the application, execute:
+```bash
+docker run -p 8501:8501 streamlit-anomaly-app
+```
+Then, open your web browser and navigate to `http://localhost:8501`.
+
 
 # Key Features
 * Designed for large-scale, production-grade distributed systems;
@@ -26,5 +41,7 @@ This notebook includes:
 * Python 3.10+
 * Jupyter Notebook
 * scikit-learn
+* streamlit
 
 See _requirements.txt_ for full list of libraries.
+
