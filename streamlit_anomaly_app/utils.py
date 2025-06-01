@@ -1,0 +1,106 @@
+import joblib
+import numpy as np
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.mixture import GaussianMixture
+from sklearn.ensemble import RandomForestClassifier, IsolationForest
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import RobustScaler, MinMaxScaler
+from sklearn.decomposition import PCA
+
+
+def load_pretrained_models(df):
+    preprocessor = joblib.load("models/preprocessor.joblib")
+    gmm = joblib.load("models/gmm_model.joblib")
+    rf = joblib.load("models/random_forest.joblib")
+    iso_forest = joblib.load("models/models/isolation_forest.joblib")
+
+    return preprocessor, iso_forest, gmm, rf
+
+
+def train_models(
+        df,
+        test_size,
+        iso_params,
+        gmm_params,
+        rf_params,
+        random_state=42,
+):
+    df_train = df[:int((1 - test_size) * len(df))]
+    df_test = df[int((1 - test_size) * len(df)):]
+
+    preprocessor = Pipeline([
+        ('robust_scaler', RobustScaler()),
+        ('minmax_scaler', MinMaxScaler()),
+        ('pca', PCA(n_components=0.95, random_state=42)),
+    ])
+    df_train_preprocessed = preprocessor.fit_transform(df_train.drop(columns=["query_ts"], errors="ignore"))
+
+    gmm = GaussianMixture(**gmm_params, random_state=random_state)
+    gmm.fit(df_train_preprocessed)
+    df_train['cluster'] = gmm.predict(df_train_preprocessed)
+
+    rf = RandomForestClassifier(**rf_params, random_state=random_state)
+    rf.fit(df_train_preprocessed, df_train['cluster'])
+    df_train['predicted_cluster'] = rf.predict(df_train_preprocessed)
+
+    iso_forest = IsolationForest(**iso_params, random_state=random_state)
+    iso_forest.fit(df_train_preprocessed)
+
+    df_train['anomaly'] = iso_forest.predict(df_train_preprocessed)
+    df_train['anomaly_score'] = -iso_forest.decision_function(df_train_preprocessed)
+
+    print(f"Train anomalies: {(df_train['anomaly'] == -1).sum()}")
+
+    return df_train, df_test, preprocessor, gmm, iso_forest, rf
+
+
+def predict(df_test, df_test_preprocessed, gmm, rf):
+
+    y_test = gmm.predict(df_test_preprocessed)
+    y_pred = rf.predict(df_test_preprocessed)
+
+    df_test['cluster'] = y_test
+    df_test['predicted_cluster'] = y_pred
+
+    return {
+    'accuracy': accuracy_score(y_test, y_pred),
+    'precision': precision_score(y_test, y_pred, average='macro', zero_division=0),
+    'recall': recall_score(y_test, y_pred, average='macro', zero_division=0),
+    'f1': f1_score(y_test, y_pred, average='macro', zero_division=0),
+    'confusion_matrix': confusion_matrix(y_test, y_pred)
+    }, df_test
+
+
+def predict_scores_labels(df_test, df_test_preprocessed, iso_forest, df_train=None):
+    df_test['anomaly'] = iso_forest.predict(df_test_preprocessed).replace({1: 0, -1: 1})
+    df_test['anomaly_score'] = -iso_forest.decision_function(df_test_preprocessed)
+
+    if df_train:
+        df_train['anomaly'] = iso_forest.predict(df_test_preprocessed).replace({1: 0, -1: 1})
+        df_train['anomaly_score'] = -iso_forest.decision_function(df_test_preprocessed)
+
+    return df_train, df_test,
+
+def analyze_anomalies(
+        test_df,
+        threshold_anomaly_data_percentage=5.0,
+        threshold_anomaly_score_percentile=95,
+):
+    cluster_anomaly_rates = test_df.groupby('cluster')['anomaly'].apply(lambda x: (x == -1).mean())
+    most_anomalous_cluster = cluster_anomaly_rates.idxmax()
+    threshold_score = np.percentile(test_df['anomaly_score'], threshold_anomaly_score_percentile)
+
+    test_cluster = test_df[test_df['cluster'] == most_anomalous_cluster]
+    test_anomaly_count = (test_cluster['anomaly_score'] >= threshold_score).sum()
+    test_anomaly_pct = (test_anomaly_count / test_df.shape[0]) * 100
+
+    anomalies_exceeded = test_anomaly_pct > threshold_anomaly_data_percentage
+
+    return {
+        "test_df": test_df,
+        "anomalies_exceeded": anomalies_exceeded,
+        "threshold_score": threshold_score,
+        "most_anomalous_cluster": most_anomalous_cluster,
+        "test_anomaly_pct": test_anomaly_pct if test_anomaly_pct else None,
+        "test_anomaly_count": test_anomaly_count if test_anomaly_count else None,
+    }

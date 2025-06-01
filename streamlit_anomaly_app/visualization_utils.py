@@ -1,0 +1,54 @@
+from matplotlib import pyplot as plt
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import numpy as np
+
+
+def plot_confusion_matrix(y_true, y_pred, labels=None, normalize=False, title="Confusion Matrix"):
+    cm = confusion_matrix(y_true, y_pred, labels=labels)
+
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1, keepdims=True)
+        fmt = '.2f'
+        cmap = 'YlGnBu'
+    else:
+        fmt = 'd'
+        cmap = 'Blues'
+
+    plt.figure(figsize=(5, 3))
+    sns.heatmap(cm, annot=True, fmt=fmt, cmap=cmap, xticklabels=labels, yticklabels=labels)
+
+    plt.title(title)
+    plt.xlabel('Predicted')
+    plt.ylabel('Actual')
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_clusters(X, cluster_labels, title="GMM Clusters"):
+    plt.figure(figsize=(7, 4))
+    palette = sns.color_palette("Set2", len(np.unique(cluster_labels)))
+    sns.scatterplot(x=X[:, 0], y=X[:, 1], hue=cluster_labels, palette=palette, s=60, edgecolor='k')
+
+    plt.title(title)
+    plt.xlabel("PCA Component 1")
+    plt.ylabel("PCA Component 2")
+    plt.legend(title="Cluster", loc="best")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+def plot_anomaly_scores(anomaly_scores, title="Isolation Forest Anomaly Scores", threshold=None):
+    plt.figure(figsize=(6, 3))
+    sns.histplot(anomaly_scores, bins=50, kde=True, color='orangered')
+    plt.title(title)
+    plt.xlabel("Anomaly Score")
+    plt.ylabel("Frequency")
+
+    if threshold:
+        plt.axvline(threshold, color='black', linestyle='--', label=f"Threshold = {threshold:.4f}")
+        plt.legend()
+
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
