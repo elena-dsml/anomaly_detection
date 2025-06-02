@@ -8,4 +8,4 @@ catboost
 matplotlib
 seaborn
 plotly
-
+streamlit

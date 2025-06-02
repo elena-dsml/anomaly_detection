@@ -8,15 +8,20 @@ from sklearn.ensemble import RandomForestClassifier, IsolationForest
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, MinMaxScaler
 from sklearn.decomposition import PCA
+from streamlit_anomaly_app.app import logger
 
 
 def check_and_prepare_data(df, skip_preprocessing=False, test_size=0.2):
     if df is None or df.empty:
-        st.error("No data available. Please upload a valid CSV file.")
+        error_message = "DataFrame is empty or not provided. Please upload a valid CSV file."
+        logger.error(error_message)
+        st.error(error_message)
         st.stop()
 
     if not isinstance(df, pd.DataFrame):
-        st.error("Data is not in DataFrame format. Please upload a valid CSV file.")
+        error_message = "Data is not in DataFrame format. Please upload a valid CSV file."
+        logger.error(error_message)
+        st.error(error_message)
         st.stop()
 
     if 'query_ts' in df.columns:
@@ -95,14 +100,15 @@ def predict(df_test, df_test_preprocessed, gmm, rf):
 
 
 def predict_scores_labels(df_test, df_test_preprocessed, iso_forest, df_train=None):
-    df_test['anomaly'] = iso_forest.predict(df_test_preprocessed).replace({1: 0, -1: 1})
+    df_test['anomaly'] = pd.Series(iso_forest.predict(df_test_preprocessed)).replace({1: 0, -1: 1})
     df_test['anomaly_score'] = -iso_forest.decision_function(df_test_preprocessed)
 
     if df_train:
-        df_train['anomaly'] = iso_forest.predict(df_test_preprocessed).replace({1: 0, -1: 1})
+        df_train['anomaly'] = pd.Series(iso_forest.predict(df_test_preprocessed)).replace({1: 0, -1: 1})
         df_train['anomaly_score'] = -iso_forest.decision_function(df_test_preprocessed)
 
     return df_train, df_test,
+
 
 def analyze_anomalies(
         test_df,

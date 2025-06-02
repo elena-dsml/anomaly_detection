@@ -1,10 +1,14 @@
 import streamlit as st
 import pandas as pd
 from matplotlib import pyplot as plt
+from logger import get_logger
 
 from visualization_utils import plot_confusion_matrix, plot_clusters, plot_anomaly_scores
 from utils import load_pretrained_models, train_models, predict, predict_scores_labels, check_and_prepare_data, analyze_anomalies
 
+
+logger = get_logger()
+logger.info("Anomaly Detection App has started")
 
 st.title("Anomaly Detection App")
 
@@ -26,42 +30,60 @@ df, df_train, df_test, df_train_preprocessed, df_test_preprocessed = pd.DataFram
 
 if data_option == "Use Sample Dataset":
     st.info("Using built-in sample dataset.")
-    df = pd.read_parquet("data/sample_data.parquet")
-    df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=True)
-    st.success("Sample dataset loaded and checked successfully.")
+    try:
+        df = pd.read_parquet("data/sample_data.parquet")
+        df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=True)
+        message = "Sample dataset loaded and checked successfully."
+        logger.info(message)
+        st.success(message)
+    except Exception as e:
+        error_message = f"Error while trying to read the file: {str(e)}"
+        st.error(error_message)
+        logger.error(error_message)
+        st.stop()
 else:
-    uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
-    if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
-        df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=False)
-        st.success("Custom dataset uploaded and preprocessed successfully.")
+    try:
+        uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+        if uploaded_file is not None:
+            df = pd.read_csv(uploaded_file)
+            df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=False)
+            message = "Custom dataset uploaded and preprocessed successfully."
+            logger.info(message)
+            st.success(message)
 
-st.write("Shape of df_train_preprocessed:", df_train_preprocessed.shape)
-st.write("Shape of df_test_preprocessed:", df_test_preprocessed.shape)
+    except Exception as e:
+        error_message = f"Error while trying to read the file: {str(e)}"
+        st.error(error_message)
+        logger.error(error_message)
+        st.stop()
 
 
 st.header("Data Overview")
 st.write(df.head())
 st.write(f"Total rows: {df.shape[0]}, Total columns: {df.shape[1]}")
+st.write(f"Train data: {df_train_preprocessed.shape}, Test data:{df_test_preprocessed.shape}")
 
 
 if mode == "Use Pretrained Model":
     st.info("Using pretrained models.")
-
     try:
         preprocessor, iso_forest, gmm, rf = load_pretrained_models()
-        st.write("Pretrained models loaded successfully.")
+        message = "Pretrained models loaded successfully."
+        logger.info(message)
+        st.write(message)
         st.write("You can now proceed to analyze the data or make predictions.")
 
     except Exception as e:
-        st.error(f"Error loading pretrained models: {e}")
+        error_message = f"Error loading pretrained models: {e}"
+        logger.error(error_message)
+        st.error(error_message)
         st.stop()
 
 else:
     st.sidebar.header("Model Hyperparameters")
 
     st.subheader("Isolation Forest Parameters")
-    iso_n_estimators = st.sidebar.slider("Number of Estimators", 20, 500, 50, step=10)
+    iso_n_estimators = st.sidebar.slider("Number of Estimators", 20, 500, 50, step=5)
     iso_max_samples = st.sidebar.slider("Max Samples", 0.1, 1.0, 0.8, step=0.1)
     iso_contamination = st.sidebar.slider("Contamination", 0.01, 0.5, 0.1, step=0.01)
 
@@ -88,9 +110,13 @@ else:
         'min_samples_split': min_samples_split,
         'criterion': rf_criterion
     }
+    logger.info(f"Model parameters selected:\nIsolation Forest params:{iso_params}\nGMM params:{gmm_params}\nRandom Forest params:{rf_params}")
 
     if st.button("Train Models"):
-        st.info("Training new models. This may take a while...")
+        message = "Training new models. This may take a while..."
+        logger.info(message)
+        st.info(message)
+
         df_train, df_test, gmm, iso_forest, rf = train_models(
             df_train,
             df_test,
@@ -99,14 +125,20 @@ else:
             gmm_params,
             rf_params,
         )
-        st.success("New models trained successfully.")
+        message = "Models trained successfully."
+        logger.info(message)
+        st.success(message)
 
 
 st.header("Step 3: Prediction")
 if st.button("Predict"):
-    st.info("Making predictions on the test dataset...")
+    message = "Making predictions on the test dataset..."
+    logger.info(message)
+    st.info(message)
+
     metrics, df_test = predict(df_test, df_test_preprocessed, gmm, rf)
 
+    logger.info(f"Metrics calculated: {metrics}")
     st.write(
         f"F1-score: {metrics['f1']:.2f}"
         f"\nPrecision: {metrics['precision']:.2f}"
@@ -115,6 +147,8 @@ if st.button("Predict"):
     )
 
     df_test = predict_scores_labels(df_test, df_test_preprocessed, iso_forest)
+
+    logger.info("Predictions made successfully.")
     st.write(f"Anomalies count in Test Data: {(df_test['anomaly'] == 1).sum()}")
 
 
@@ -137,34 +171,54 @@ threshold_anomaly_score_percentile = st.slider(
     help="Percentile of anomaly scores that can be considered anomalous."
 )
 
-st.write(f"Anomaly Data Percentage Threshold: {threshold_anomaly_data_percentage:.2f}%")
-st.write(f"Anomaly Score Percentile Threshold: {threshold_anomaly_score_percentile:.2f}%")
+threshold_message = (
+    "Thresholds for anomaly detection:\n"
+    f"- Anomaly Data Percentage: {threshold_anomaly_data_percentage:.2f}%\n"
+    f"- Anomaly Score Percentile: {threshold_anomaly_score_percentile:.2f}%"
+)
+logger.info(threshold_message)
+st.write(threshold_message)
+
 
 if st.button("Analyze and Detect Anomalies"):
-    st.info("Analyzing anomalies in the test dataset...")
+    message = "Analyzing anomalies in the test dataset..."
+    logger.info(message)
+    st.info(message)
+
     analyzed_results = analyze_anomalies(
         test_df=df_test,
         threshold_anomaly_data_percentage=threshold_anomaly_data_percentage,
         threshold_anomaly_score_percentile=threshold_anomaly_score_percentile,
         )
 
+    logger.info(f"Anomaly analysis results: {analyzed_results}")
     st.write(f"- Most Anomalous Cluster: {analyzed_results['most_anomalous_cluster']}")
     st.write(f"- Test anomaly count:  {analyzed_results['test_anomaly_count']}")
     st.write(f"- Threshold score :      {analyzed_results['threshold_score']:.2f}")
     st.write(f"- Test anomaly rate: {analyzed_results['test_anomaly_pct']:.2f}%")
 
     if analyzed_results["anomalies_exceeded"]:
-        st.warning("ALERT: Anomalous behavior detected in test data!")
+        alert_message = "ALERT: Anomalous behavior detected in test data!"
+        logger.warning(alert_message)
+        st.warning(alert_message)
     else:
-        st.write("Test data is within normal anomaly rate range.")
+        message = "Test data anomalies do not exceed the defined thresholds."
+        logger.info(message)
+        st.write(message)
+
+    logger.info("Anomaly analysis completed.")
 
 
 st.subheader("Visualizations")
 if st.button("Plot Results"):
-    st.info("Generating visualizations for the test dataset...")
+    message = "Generating visualizations for the test dataset..."
+    logger.info(message)
+    st.info(message)
 
     if 'cluster' not in df_test or 'predicted_cluster' not in df_test or 'anomaly_score' not in df_test:
-        st.error("Required columns for visualization are missing in the test dataset.")
+        error_message = "Required columns for visualization are missing in the test dataset."
+        logger.error(error_message)
+        st.error(error_message)
         st.stop()
 
     st.markdown("### Test Data Overview")
