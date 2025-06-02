@@ -163,7 +163,7 @@ else:
     st.write("Test data is within normal anomaly rate range.")
 
 
-st.subheader("📊 Visualizations")
+st.subheader("Visualizations")
 
 
 st.markdown("### GMM Clusters")

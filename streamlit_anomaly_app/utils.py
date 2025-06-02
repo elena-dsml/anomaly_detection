@@ -9,7 +9,7 @@ from sklearn.decomposition import PCA
 
 
 def load_pretrained_models(df):
-    preprocessor = joblib.load("models/preprocessor.joblib")
+    preprocessor = joblib.load("models/preprocessing_stage1.joblib")
     gmm = joblib.load("models/gmm_model.joblib")
     rf = joblib.load("models/random_forest.joblib")
     iso_forest = joblib.load("models/models/isolation_forest.joblib")
