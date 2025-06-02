@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from logger import get_logger
 
 from visualization_utils import plot_confusion_matrix, plot_clusters, plot_anomaly_scores
-from utils import load_pretrained_models, train_models, predict, predict_scores_labels, check_and_prepare_data, analyze_anomalies
+from utils import load_pretrained_models, train_models, predict_clusters, predict_scores_labels, check_and_prepare_data, analyze_anomalies
 
 
 logger = get_logger()
@@ -117,7 +117,7 @@ else:
         logger.info(message)
         st.info(message)
 
-        df_train, df_test, gmm, iso_forest, rf = train_models(
+        df_train, gmm, iso_forest, rf = train_models(
             df_train,
             df_test,
             df_train_preprocessed,
@@ -136,7 +136,8 @@ if st.button("Predict"):
     logger.info(message)
     st.info(message)
 
-    metrics, df_test = predict(df_test, df_test_preprocessed, gmm, rf)
+    metrics, df_test, predictions = predict_clusters(df_test, df_test_preprocessed, gmm, rf)
+
 
     logger.info(f"Metrics calculated: {metrics}")
     st.write(
@@ -146,7 +147,10 @@ if st.button("Predict"):
         f"\nAccuracy: {metrics['accuracy']:.2f}"
     )
 
-    df_train, df_test = predict_scores_labels(df_test, df_test_preprocessed, iso_forest)
+    df_train, df_test, anomaly_labels, anomaly_scores = predict_scores_labels(df_test, df_test_preprocessed, iso_forest)
+    predictions['anomaly'] = anomaly_labels
+    predictions['anomaly_score'] = anomaly_scores
+    st.write("Predictions DataFrame:", predictions.shape, predictions.columns)
 
     logger.info("Predictions made successfully.")
     st.write(f"Anomalies count in Test Data: {(df_test['anomaly'] == 1).sum()}")
@@ -186,7 +190,7 @@ if st.button("Analyze and Detect Anomalies"):
     st.info(message)
 
     analyzed_results = analyze_anomalies(
-        test_df=df_test,
+        predictions=predictions,
         threshold_anomaly_data_percentage=threshold_anomaly_data_percentage,
         threshold_anomaly_score_percentile=threshold_anomaly_score_percentile,
         )
