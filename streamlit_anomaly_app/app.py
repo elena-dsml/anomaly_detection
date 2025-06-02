@@ -44,6 +44,7 @@ st.write(f"Total rows: {df.shape[0]}, Total columns: {df.shape[1]}")
 
 if mode == "Use Pretrained Model":
     st.info("Using pretrained models.")
+
     try:
         preprocessor, iso_forest, gmm, rf = load_pretrained_models()
         st.write("Pretrained models loaded successfully.")
@@ -85,32 +86,33 @@ else:
         'criterion': rf_criterion
     }
 
-    st.info("Training new models. This may take a while...")
-    df_train, df_test, gmm, iso_forest, rf = train_models(
-        df_train,
-        df_test,
-        df_train_preprocessed,
-        iso_params,
-        gmm_params,
-        rf_params,
-    )
-    st.success("New models trained successfully.")
+    if st.button("Train Models"):
+        st.info("Training new models. This may take a while...")
+        df_train, df_test, gmm, iso_forest, rf = train_models(
+            df_train,
+            df_test,
+            df_train_preprocessed,
+            iso_params,
+            gmm_params,
+            rf_params,
+        )
+        st.success("New models trained successfully.")
 
 
 st.header("Step 3: Prediction")
+if st.button("Predict"):
+    st.info("Making predictions on the test dataset...")
+    metrics, df_test = predict(df_test, df_test_preprocessed, gmm, rf)
 
-st.info("Making predictions on the test dataset...")
-metrics, df_test = predict(df_test, df_test_preprocessed, gmm, rf)
+    st.write(
+        f"F1-score: {metrics['f1']:.2f}"
+        f"\nPrecision: {metrics['precision']:.2f}"
+        f"\nRecall: {metrics['recall']:.2f}"
+        f"\nAccuracy: {metrics['accuracy']:.2f}"
+    )
 
-st.write(
-    f"F1-score: {metrics['f1']:.2f}"
-    f"\nPrecision: {metrics['precision']:.2f}"
-    f"\nRecall: {metrics['recall']:.2f}"
-    f"\nAccuracy: {metrics['accuracy']:.2f}"
-)
-
-df_test = predict_scores_labels(df_test, df_test_preprocessed, iso_forest)
-st.write(f"Anomalies count in Test Data: {(df_test['anomaly'] == 1).sum()}")
+    df_test = predict_scores_labels(df_test, df_test_preprocessed, iso_forest)
+    st.write(f"Anomalies count in Test Data: {(df_test['anomaly'] == 1).sum()}")
 
 
 st.header("Step 4: Anomaly Analysis and Detection")
@@ -135,38 +137,48 @@ threshold_anomaly_score_percentile = st.slider(
 st.write(f"Anomaly Data Percentage Threshold: {threshold_anomaly_data_percentage:.2f}%")
 st.write(f"Anomaly Score Percentile Threshold: {threshold_anomaly_score_percentile:.2f}%")
 
+if st.button("Analyze and Detect Anomalies"):
+    st.info("Analyzing anomalies in the test dataset...")
+    analyzed_results = analyze_anomalies(
+        test_df=df_test,
+        threshold_anomaly_data_percentage=threshold_anomaly_data_percentage,
+        threshold_anomaly_score_percentile=threshold_anomaly_score_percentile,
+        )
 
-analyzed_results = analyze_anomalies(
-    test_df=df_test,
-    threshold_anomaly_data_percentage=threshold_anomaly_data_percentage,
-    threshold_anomaly_score_percentile=threshold_anomaly_score_percentile,
-    )
+    st.write(f"- Most Anomalous Cluster: {analyzed_results['most_anomalous_cluster']}")
+    st.write(f"- Test anomaly count:  {analyzed_results['test_anomaly_count']}")
+    st.write(f"- Threshold score :      {analyzed_results['threshold_score']:.2f}")
+    st.write(f"- Test anomaly rate: {analyzed_results['test_anomaly_pct']:.2f}%")
 
-st.write(f"- Most Anomalous Cluster: {analyzed_results['most_anomalous_cluster']}")
-st.write(f"- Test anomaly count:  {analyzed_results['test_anomaly_count']}")
-st.write(f"- Threshold score :      {analyzed_results['threshold_score']:.2f}")
-st.write(f"- Test anomaly rate: {analyzed_results['test_anomaly_pct']:.2f}%")
-
-if analyzed_results["anomalies_exceeded"]:
-    st.warning("ALERT: Anomalous behavior detected in test data!")
-else:
-    st.write("Test data is within normal anomaly rate range.")
+    if analyzed_results["anomalies_exceeded"]:
+        st.warning("ALERT: Anomalous behavior detected in test data!")
+    else:
+        st.write("Test data is within normal anomaly rate range.")
 
 
 st.subheader("Visualizations")
+if st.button("Plot Results"):
+    st.info("Generating visualizations for the test dataset...")
 
+    if 'cluster' not in df_test or 'predicted_cluster' not in df_test or 'anomaly_score' not in df_test:
+        st.error("Required columns for visualization are missing in the test dataset.")
+        st.stop()
 
-st.markdown("### GMM Clusters")
-fig1 = plt.figure()
-plot_clusters(X=df_test_preprocessed, cluster_labels=df_test['cluster'], title="GMM Clusters")
-st.pyplot(fig1)
+    st.markdown("### Test Data Overview")
+    st.write(df_test.head())
+    st.write(f"Total rows: {df_test.shape[0]}, Total columns: {df_test.shape[1]}")
 
-st.markdown("### Confusion Matrix")
-fig2 = plt.figure()
-plot_confusion_matrix(y_true=df_test['cluster'], y_pred=df_test['predicted_cluster'], title="Confusion Matrix")
-st.pyplot(fig2)
+    st.markdown("### GMM Clusters")
+    fig1 = plt.figure()
+    plot_clusters(X=df_test_preprocessed, cluster_labels=df_test['cluster'], title="GMM Clusters")
+    st.pyplot(fig1)
 
-st.markdown("### Isolation Forest Anomaly Scores")
-fig3 = plt.figure()
-plot_anomaly_scores(anomaly_scores=df_test['anomaly_score'], title="Test Set Anomaly Scores")
-st.pyplot(fig3)
+    st.markdown("### Confusion Matrix")
+    fig2 = plt.figure()
+    plot_confusion_matrix(y_true=df_test['cluster'], y_pred=df_test['predicted_cluster'], title="Confusion Matrix")
+    st.pyplot(fig2)
+
+    st.markdown("### Isolation Forest Anomaly Scores")
+    fig3 = plt.figure()
+    plot_anomaly_scores(anomaly_scores=df_test['anomaly_score'], title="Test Set Anomaly Scores")
+    st.pyplot(fig3)
