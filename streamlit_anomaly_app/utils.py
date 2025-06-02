@@ -1,5 +1,7 @@
 import joblib
 import numpy as np
+import pandas as pd
+import streamlit as st
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.mixture import GaussianMixture
 from sklearn.ensemble import RandomForestClassifier, IsolationForest
@@ -8,7 +10,37 @@ from sklearn.preprocessing import RobustScaler, MinMaxScaler
 from sklearn.decomposition import PCA
 
 
-def load_pretrained_models(df):
+def check_and_prepare_data(df, skip_preprocessing=False, test_size=0.2):
+    if df is None or df.empty:
+        st.error("No data available. Please upload a valid CSV file.")
+        st.stop()
+
+    if not isinstance(df, pd.DataFrame):
+        st.error("Data is not in DataFrame format. Please upload a valid CSV file.")
+        st.stop()
+
+    if 'query_ts' in df.columns:
+        df.drop(columns=['query_ts'], inplace=True, errors="ignore")
+
+    df.dropna().reset_index(drop=True, inplace=True)
+    df_train = df[:int((1 - test_size) * len(df))]
+    df_test = df[int((1 - test_size) * len(df)):]
+
+    if skip_preprocessing:
+        return df_train, df_test, pd.DataFrame(), pd.DataFrame()
+
+    preprocessor = Pipeline([
+        ('robust_scaler', RobustScaler()),
+        ('minmax_scaler', MinMaxScaler()),
+        ('pca', PCA(n_components=0.95, random_state=42)),
+    ])
+    df_train_preprocessed = preprocessor.fit_transform(df_train)
+    df_test_preprocessed = preprocessor.transform(df_train)
+
+    return df_train, df_test, df_train_preprocessed, df_test_preprocessed
+
+
+def load_pretrained_models():
     preprocessor = joblib.load("models/preprocessing_stage1.joblib")
     gmm = joblib.load("models/gmm_model.joblib")
     rf = joblib.load("models/random_forest.joblib")
@@ -18,23 +50,14 @@ def load_pretrained_models(df):
 
 
 def train_models(
-        df,
-        test_size,
+        df_train,
+        df_test,
+        df_train_preprocessed,
         iso_params,
         gmm_params,
         rf_params,
         random_state=42,
 ):
-    df_train = df[:int((1 - test_size) * len(df))]
-    df_test = df[int((1 - test_size) * len(df)):]
-
-    preprocessor = Pipeline([
-        ('robust_scaler', RobustScaler()),
-        ('minmax_scaler', MinMaxScaler()),
-        ('pca', PCA(n_components=0.95, random_state=42)),
-    ])
-    df_train_preprocessed = preprocessor.fit_transform(df_train.drop(columns=["query_ts"], errors="ignore"))
-
     gmm = GaussianMixture(**gmm_params, random_state=random_state)
     gmm.fit(df_train_preprocessed)
     df_train['cluster'] = gmm.predict(df_train_preprocessed)
@@ -51,7 +74,7 @@ def train_models(
 
     print(f"Train anomalies: {(df_train['anomaly'] == -1).sum()}")
 
-    return df_train, df_test, preprocessor, gmm, iso_forest, rf
+    return df_train, df_test, gmm, iso_forest, rf
 
 
 def predict(df_test, df_test_preprocessed, gmm, rf):

@@ -3,7 +3,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from visualization_utils import plot_confusion_matrix, plot_clusters, plot_anomaly_scores
-from utils import load_pretrained_models, train_models, predict, predict_scores_labels
+from utils import load_pretrained_models, train_models, predict, predict_scores_labels, check_and_prepare_data
 from streamlit_anomaly_app.utils import analyze_anomalies
 
 
@@ -23,31 +23,30 @@ data_option = st.radio(
     help="Use a provided sample or upload your own CSV file."
 )
 
-df = pd.DataFrame()
+df, df_train, df_test, df_train_preprocessed, df_test_preprocessed = pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
 if data_option == "Use Sample Dataset":
     st.info("Using built-in sample dataset.")
     df = pd.read_csv("data/sample_data.csv")
+    df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=True)
+    st.success("Sample dataset loaded and checked successfully.")
 else:
     uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
-        st.success("Custom dataset uploaded successfully.")
+        df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=False)
+        st.success("Custom dataset uploaded and preprocessed successfully.")
 
-if df is None or df.empty:
-    st.error("No data available. Please upload a valid CSV file.")
-    st.stop()
 
 st.header("Data Overview")
 st.write(df.head())
 st.write(f"Total rows: {df.shape[0]}, Total columns: {df.shape[1]}")
 
 
-
 if mode == "Use Pretrained Model":
     st.info("Using pretrained models.")
     try:
-        preprocessor, iso_forest, gmm, rf = load_pretrained_models(df)
+        preprocessor, iso_forest, gmm, rf = load_pretrained_models()
         st.write("Pretrained models loaded successfully.")
         st.write("You can now proceed to analyze the data or make predictions.")
 
@@ -56,15 +55,7 @@ if mode == "Use Pretrained Model":
         st.stop()
 
 else:
-    test_size = st.slider(
-        "Test Data Size",
-        min_value=0.1,
-        max_value=0.9,
-        value=0.3,
-        step=0.05,
-        help="Select the proportion of data to use for testing."
-    )
-    st.sidebar.header("🔧 Model Hyperparameters")
+    st.sidebar.header("Model Hyperparameters")
 
     st.subheader("Isolation Forest Parameters")
     iso_n_estimators = st.sidebar.slider("Number of Estimators", 20, 500, 50, step=10)
@@ -95,11 +86,11 @@ else:
         'criterion': rf_criterion
     }
 
-
     st.info("Training new models. This may take a while...")
-    df_train, df_test, preprocessor, gmm, iso_forest, rf = train_models(
-        df,
-        test_size,
+    df_train, df_test, gmm, iso_forest, rf = train_models(
+        df_train,
+        df_test,
+        df_train_preprocessed,
         iso_params,
         gmm_params,
         rf_params,
@@ -107,9 +98,9 @@ else:
     st.success("New models trained successfully.")
 
 
-st.header("Step 3: Results")
+st.header("Step 3: Prediction")
 
-df_test_preprocessed = preprocessor.transform(df_test.drop(columns=["query_ts"], errors="ignore"))
+st.info("Making predictions on the test dataset...")
 metrics, df_test = predict(df_test, df_test_preprocessed, gmm, rf)
 
 st.write(
@@ -123,7 +114,7 @@ df_test = predict_scores_labels(df_test, df_test_preprocessed, iso_forest)
 st.write(f"Anomalies count in Test Data: {(df_test['anomaly'] == 1).sum()}")
 
 
-st.header("Step 4: Anomaly Analysis and Final Verdict")
+st.header("Step 4: Anomaly Analysis and Detection")
 
 threshold_anomaly_data_percentage = st.slider(
     "Anomaly Data Percentage Threshold",

@@ -20,26 +20,26 @@ This notebook includes:
 * Model comparison using silhouette score, F1-score, and visual interpretation;
 * Performance evaluation.
 
-_streamlit-anomaly-app_
+_streamlit_anomaly_app_
 This directory contains the Streamlit application and its dependencies:
 * _app.py_: The main Streamlit application file that sets up the user interface and handles interactions;
-* _models.py_: A module containing the machine learning models used for anomaly detection;
-* _utils.py_: A utility module with helper functions for data processing, visualization, and other common tasks;
+* _utils.py_: A utility module with helper functions for data processing, training, prediction and other common tasks;
+* _visualization_utils.py_: A utility module with helper functions for data visualization;
 * _data_: A directory containing sample data files used by the Streamlit app for demonstration purposes.
 * _models_: A directory containing pre-trained machine learning models used for anomaly detection;
 * _dockerfile_: A Dockerfile to build a Docker image for the Streamlit app, allowing for easy deployment and sharing of the application;
 * _requirements.txt_: A file listing the Python packages required to run the Streamlit app. 
 
-## streamlit-anomaly-app
+## streamlit_anomaly_app
 
 To build the application, start Docker app and in the repository root run the command in the terminal:
 ```bash
-cd streamlit-anomaly-app
-docker build -t streamlit-anomaly-app .
+cd streamlit_anomaly_app
+docker build -t streamlit_anomaly_app .
 ```
 To run the application, execute:
 ```bash
-docker run -p 8501:8501 streamlit-anomaly-app
+docker run -p 8501:8501 streamlit_anomaly_app
 ```
 Then, open your web browser and navigate to `http://localhost:8501`.
 
@@ -57,7 +57,7 @@ Then, open your web browser and navigate to `http://localhost:8501`.
 
 See _requirements.txt_ for full list of libraries for running Jupyter Notebooks.
 
-See _streamlit-anomaly-app/requirements.txt_ for libraries required to run the Streamlit app.
+See _streamlit_anomaly_app/requirements.txt_ for libraries required to run the Streamlit app.
 
 
 ![](https://komarev.com/ghpvc/?username=elena-dsml)
