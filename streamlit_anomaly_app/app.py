@@ -57,6 +57,7 @@ if data_option == "Use Sample Dataset":
     try:
         df = pd.read_parquet("data/sample_data.parquet")
         df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=True)
+        st.session_state.df_test_preprocessed = df_test_preprocessed
 
         message = "Sample dataset loaded and checked successfully."
         logger.info(message)
@@ -72,6 +73,7 @@ else:
         if uploaded_file is not None:
             df = pd.read_csv(uploaded_file)
             df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=False)
+            st.session_state.df_test_preprocessed = df_test_preprocessed
 
             message = "Custom dataset uploaded and preprocessed successfully."
             logger.info(message)
@@ -256,8 +258,8 @@ if st.button("Plot Results"):
         st.stop()
 
     st.markdown("### Test Data Overview")
-    st.write(df_test.head())
-    st.write(f"Total rows: {df_test.shape[0]}, Total columns: {df_test.shape[1]}")
+    st.write(df_test_preprocessed.head())
+    st.write(f"Total rows: {df_test_preprocessed.shape[0]}, Total columns: {df_test_preprocessed.shape[1]}")
 
     st.markdown("### GMM Clusters")
     fig1 = plt.figure()

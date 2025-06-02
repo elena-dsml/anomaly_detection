@@ -28,7 +28,7 @@ def plot_confusion_matrix(y_true, y_pred, labels=None, normalize=False, title="C
 def plot_clusters(X, cluster_labels, title="GMM Clusters"):
     plt.figure(figsize=(7, 4))
     palette = sns.color_palette("Set2", len(np.unique(cluster_labels)))
-    sns.scatterplot(x=X[:, 0], y=X[:, 1], hue=cluster_labels, palette=palette, s=60, edgecolor='k')
+    sns.scatterplot(x=X.iloc[:, 0], y=X.iloc[:, 1], hue=cluster_labels, palette=palette, s=60, edgecolor='k')
 
     plt.title(title)
     plt.xlabel("PCA Component 1")
