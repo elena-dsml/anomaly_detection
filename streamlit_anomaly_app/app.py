@@ -26,7 +26,7 @@ df, df_train, df_test, df_train_preprocessed, df_test_preprocessed = pd.DataFram
 
 if data_option == "Use Sample Dataset":
     st.info("Using built-in sample dataset.")
-    df = pd.read_csv("data/sample_data.csv")
+    df = pd.read_parquet("data/sample_data.parquet")
     df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=True)
     st.success("Sample dataset loaded and checked successfully.")
 else:
