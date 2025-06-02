@@ -8,19 +8,16 @@ from sklearn.ensemble import RandomForestClassifier, IsolationForest
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, MinMaxScaler
 from sklearn.decomposition import PCA
-from app import logger
 
 
 def check_and_prepare_data(df, skip_preprocessing=False, test_size=0.2):
     if df is None or df.empty:
         error_message = "DataFrame is empty or not provided. Please upload a valid CSV file."
-        logger.error(error_message)
         st.error(error_message)
         st.stop()
 
     if not isinstance(df, pd.DataFrame):
         error_message = "Data is not in DataFrame format. Please upload a valid CSV file."
-        logger.error(error_message)
         st.error(error_message)
         st.stop()
 
