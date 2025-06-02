@@ -84,6 +84,8 @@ def predict_clusters(df_test, df_test_preprocessed, gmm, rf):
 
     df_test['cluster'] = y_test
     df_test['predicted_cluster'] = y_pred
+    predictions = pd.concat([pd.Series(y_test), pd.Series(y_pred)], axis=1)
+    predictions.columns = ['cluster', 'predicted_cluster']
 
     metrics = {
     'accuracy': accuracy_score(y_test, y_pred),
@@ -92,7 +94,7 @@ def predict_clusters(df_test, df_test_preprocessed, gmm, rf):
     'f1': f1_score(y_test, y_pred, average='macro', zero_division=0),
     'confusion_matrix': confusion_matrix(y_test, y_pred)
     }
-    return metrics, df_test, pd.DataFrame(y_pred, columns=['predicted_cluster'])
+    return metrics, df_test, predictions
 
 
 def predict_scores_labels(df_test, df_test_preprocessed, iso_forest, df_train=None):

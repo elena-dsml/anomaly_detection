@@ -12,6 +12,30 @@ logger.info("Anomaly Detection App has started")
 
 st.title("Anomaly Detection App")
 
+def init_session_vars(defaults: dict):
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
+
+init_session_vars({
+    'df_test': None,
+    'metrics': None,
+    'gmm': None,
+    'rf': None,
+    'iso_forest': None,
+    'predictions': None,
+    'df_train': None,
+    'df_train_preprocessed': None,
+    'df_test_preprocessed': None,
+    'anomaly_labels': None,
+    'anomaly_scores': None,
+    'analyzed_results': None,
+    'threshold_anomaly_data_percentage': 5.0,
+    'threshold_anomaly_score_percentile': 50.0,
+})
+
+
 mode = st.radio(
     "Step 1: Choose mode",
     options=["Use Pretrained Model", "Train New Model"],
@@ -33,6 +57,7 @@ if data_option == "Use Sample Dataset":
     try:
         df = pd.read_parquet("data/sample_data.parquet")
         df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=True)
+
         message = "Sample dataset loaded and checked successfully."
         logger.info(message)
         st.success(message)
@@ -47,6 +72,7 @@ else:
         if uploaded_file is not None:
             df = pd.read_csv(uploaded_file)
             df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=False)
+
             message = "Custom dataset uploaded and preprocessed successfully."
             logger.info(message)
             st.success(message)
@@ -138,7 +164,6 @@ if st.button("Predict"):
 
     metrics, df_test, predictions = predict_clusters(df_test, df_test_preprocessed, gmm, rf)
 
-
     logger.info(f"Metrics calculated: {metrics}")
     st.write(
         f"F1-score: {metrics['f1']:.2f}"
@@ -150,7 +175,10 @@ if st.button("Predict"):
     df_train, df_test, anomaly_labels, anomaly_scores = predict_scores_labels(df_test, df_test_preprocessed, iso_forest)
     predictions['anomaly'] = anomaly_labels
     predictions['anomaly_score'] = anomaly_scores
-    st.write("Predictions DataFrame:", predictions.shape, predictions.columns)
+
+    st.session_state.df_train = df_train
+    st.session_state.df_test = df_test
+    st.session_state.predictions = predictions
 
     logger.info("Predictions made successfully.")
     st.write(f"Anomalies count in Test Data: {(df_test['anomaly'] == 1).sum()}")
@@ -174,6 +202,8 @@ threshold_anomaly_score_percentile = st.slider(
     step=0.1,
     help="Percentile of anomaly scores that can be considered anomalous."
 )
+st.session_state.threshold_anomaly_data_percentage = threshold_anomaly_data_percentage
+st.session_state.threshold_anomaly_score_percentile = threshold_anomaly_score_percentile
 
 threshold_message = (
     "Thresholds for anomaly detection:\n"
@@ -190,9 +220,9 @@ if st.button("Analyze and Detect Anomalies"):
     st.info(message)
 
     analyzed_results = analyze_anomalies(
-        predictions=predictions,
-        threshold_anomaly_data_percentage=threshold_anomaly_data_percentage,
-        threshold_anomaly_score_percentile=threshold_anomaly_score_percentile,
+        predictions=st.session_state.predictions,
+        threshold_anomaly_data_percentage=st.session_state.threshold_anomaly_data_percentage,
+        threshold_anomaly_score_percentile=st.session_state.threshold_anomaly_score_percentile,
         )
 
     logger.info(f"Anomaly analysis results: {analyzed_results}")
@@ -219,8 +249,8 @@ if st.button("Plot Results"):
     logger.info(message)
     st.info(message)
 
-    if 'cluster' not in df_test or 'predicted_cluster' not in df_test or 'anomaly_score' not in df_test:
-        error_message = "Required columns for visualization are missing in the test dataset."
+    if 'cluster' not in st.session_state.predictions or 'predicted_cluster' not in st.session_state.predictions or 'anomaly_score' not in st.session_state.predictions:
+        error_message = "Required columns for visualization are missing in the predictions."
         logger.error(error_message)
         st.error(error_message)
         st.stop()
@@ -231,15 +261,15 @@ if st.button("Plot Results"):
 
     st.markdown("### GMM Clusters")
     fig1 = plt.figure()
-    plot_clusters(X=df_test_preprocessed, cluster_labels=df_test['cluster'], title="GMM Clusters")
+    plot_clusters(X=df_test_preprocessed, cluster_labels=st.session_state.predictions['predicted_cluster'], title="GMM Clusters")
     st.pyplot(fig1)
 
     st.markdown("### Confusion Matrix")
     fig2 = plt.figure()
-    plot_confusion_matrix(y_true=df_test['cluster'], y_pred=df_test['predicted_cluster'], title="Confusion Matrix")
+    plot_confusion_matrix(y_true=st.session_state.predictions['cluster'], y_pred=st.session_state.predictions['predicted_cluster'], title="Confusion Matrix")
     st.pyplot(fig2)
 
     st.markdown("### Isolation Forest Anomaly Scores")
     fig3 = plt.figure()
-    plot_anomaly_scores(anomaly_scores=df_test['anomaly_score'], title="Test Set Anomaly Scores")
+    plot_anomaly_scores(anomaly_scores=st.session_state.predictions['anomaly_score'], title="Test Set Anomaly Scores")
     st.pyplot(fig3)
