@@ -257,13 +257,15 @@ if st.button("Plot Results"):
         st.error(error_message)
         st.stop()
 
+    test_reset = st.session_state.df_test_preprocessed.reset_index(drop=True)
+
     st.markdown("### Test Data Overview")
-    st.write(df_test_preprocessed.head())
-    st.write(f"Total rows: {df_test_preprocessed.shape[0]}, Total columns: {df_test_preprocessed.shape[1]}")
+    st.write(test_reset.head())
+    st.write(f"Total rows: {test_reset.shape[0]}, Total columns: {test_reset.shape[1]}")
 
     st.markdown("### GMM Clusters")
     fig1 = plot_clusters(
-        X=df_test_preprocessed,
+        X=test_reset,
         cluster_labels=st.session_state.predictions['predicted_cluster'],
         title="GMM Clusters",
     )
