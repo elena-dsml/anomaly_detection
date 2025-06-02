@@ -5,7 +5,7 @@ import numpy as np
 
 
 def plot_clusters(X, cluster_labels, title="GMM Clusters"):
-    plt.figure(figsize=(7, 4))
+    fig = plt.figure(figsize=(7, 4))
     palette = sns.color_palette("Set2", len(np.unique(cluster_labels)))
     sns.scatterplot(x=X.iloc[:, 0], y=X.iloc[:, 1], hue=cluster_labels, palette=palette, s=60, edgecolor='k')
 
@@ -15,11 +15,12 @@ def plot_clusters(X, cluster_labels, title="GMM Clusters"):
     plt.legend(title="Cluster", loc="best")
     plt.grid(True)
     plt.tight_layout()
-    plt.show()
+
+    return fig
 
 
 def plot_anomaly_scores(anomaly_scores, title="Isolation Forest Anomaly Scores", threshold=None):
-    plt.figure(figsize=(6, 3))
+    fig = plt.figure(figsize=(6, 3))
     sns.histplot(anomaly_scores, bins=50, kde=True, color='orangered')
     plt.title(title)
     plt.xlabel("Anomaly Score")
@@ -31,8 +32,8 @@ def plot_anomaly_scores(anomaly_scores, title="Isolation Forest Anomaly Scores",
 
     plt.grid(True)
     plt.tight_layout()
-    plt.show()
 
+    return fig
 
 def plot_confusion_matrix(y_true, y_pred, labels=None, normalize=False, title="Confusion Matrix"):
     if labels is None:
@@ -48,11 +49,13 @@ def plot_confusion_matrix(y_true, y_pred, labels=None, normalize=False, title="C
         fmt = 'd'
         cmap = 'Blues'
 
-    plt.figure(figsize=(5, 3))
-    sns.heatmap(cm, annot=True, fmt=fmt, cmap=cmap, xticklabels=labels, yticklabels=labels)
+    fig, ax = plt.subplots(figsize=(5, 3))
 
-    plt.title(title)
-    plt.xlabel('Predicted')
-    plt.ylabel('Actual')
-    plt.tight_layout()
-    plt.show()
+    sns.heatmap(cm, annot=True, fmt=fmt, cmap=cmap, xticklabels=labels, yticklabels=labels, ax=ax)
+
+    ax.set_title(title)
+    ax.set_xlabel('Predicted')
+    ax.set_ylabel('Actual')
+    fig.tight_layout()
+
+    return fig

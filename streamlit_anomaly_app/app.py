@@ -262,8 +262,7 @@ if st.button("Plot Results"):
     st.write(f"Total rows: {df_test_preprocessed.shape[0]}, Total columns: {df_test_preprocessed.shape[1]}")
 
     st.markdown("### GMM Clusters")
-    fig1 = plt.figure()
-    plot_clusters(
+    fig1 = plot_clusters(
         X=df_test_preprocessed,
         cluster_labels=st.session_state.predictions['predicted_cluster'],
         title="GMM Clusters",
@@ -271,13 +270,12 @@ if st.button("Plot Results"):
     st.pyplot(fig1)
 
     st.markdown("### Isolation Forest Anomaly Scores")
-    fig2 = plt.figure()
-    plot_anomaly_scores(anomaly_scores=st.session_state.predictions['anomaly_score'], title="Test Set Anomaly Scores")
+    fig2 = plot_anomaly_scores(anomaly_scores=st.session_state.predictions['anomaly_score'], title="Test Set Anomaly Scores")
     st.pyplot(fig2)
 
     st.markdown("### Confusion Matrix")
-    fig3 = plt.figure()
-    plot_confusion_matrix(
+
+    fig3 = plot_confusion_matrix(
         y_true=st.session_state.predictions['cluster'],
         y_pred=st.session_state.predictions['predicted_cluster'],
         title="Confusion Matrix",
