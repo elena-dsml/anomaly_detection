@@ -3,8 +3,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from visualization_utils import plot_confusion_matrix, plot_clusters, plot_anomaly_scores
-from utils import load_pretrained_models, train_models, predict, predict_scores_labels, check_and_prepare_data
-from streamlit_anomaly_app.utils import analyze_anomalies
+from utils import load_pretrained_models, train_models, predict, predict_scores_labels, check_and_prepare_data, analyze_anomalies
 
 
 st.title("Anomaly Detection App")
