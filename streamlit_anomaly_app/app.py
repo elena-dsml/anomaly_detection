@@ -36,6 +36,9 @@ else:
         df_train, df_test, df_train_preprocessed, df_test_preprocessed = check_and_prepare_data(df, skip_preprocessing=False)
         st.success("Custom dataset uploaded and preprocessed successfully.")
 
+st.write("Shape of df_train_preprocessed:", df_train_preprocessed.shape)
+st.write("Shape of df_test_preprocessed:", df_test_preprocessed.shape)
+
 
 st.header("Data Overview")
 st.write(df.head())

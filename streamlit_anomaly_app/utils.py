@@ -27,7 +27,7 @@ def check_and_prepare_data(df, skip_preprocessing=False, test_size=0.2):
     df_test = df[int((1 - test_size) * len(df)):]
 
     if skip_preprocessing:
-        return df_train, df_test, pd.DataFrame(), pd.DataFrame()
+        return pd.DataFrame(), pd.DataFrame(), df_train, df_test
 
     preprocessor = Pipeline([
         ('robust_scaler', RobustScaler()),
@@ -35,7 +35,7 @@ def check_and_prepare_data(df, skip_preprocessing=False, test_size=0.2):
         ('pca', PCA(n_components=0.95, random_state=42)),
     ])
     df_train_preprocessed = preprocessor.fit_transform(df_train)
-    df_test_preprocessed = preprocessor.transform(df_train)
+    df_test_preprocessed = preprocessor.transform(df_test)
 
     return df_train, df_test, df_train_preprocessed, df_test_preprocessed
 
