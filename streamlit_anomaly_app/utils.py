@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestClassifier, IsolationForest
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler, MinMaxScaler
 from sklearn.decomposition import PCA
-from streamlit_anomaly_app.app import logger
+from app import logger
 
 
 def check_and_prepare_data(df, skip_preprocessing=False, test_size=0.2):
