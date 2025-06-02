@@ -80,6 +80,7 @@ def train_models(
 
 
 def predict(df_test, df_test_preprocessed, gmm, rf):
+    df_test = df_test.copy()
 
     y_test = gmm.predict(df_test_preprocessed)
     y_pred = rf.predict(df_test_preprocessed)
@@ -87,24 +88,27 @@ def predict(df_test, df_test_preprocessed, gmm, rf):
     df_test['cluster'] = y_test
     df_test['predicted_cluster'] = y_pred
 
-    return {
+    metrics = {
     'accuracy': accuracy_score(y_test, y_pred),
     'precision': precision_score(y_test, y_pred, average='macro', zero_division=0),
     'recall': recall_score(y_test, y_pred, average='macro', zero_division=0),
     'f1': f1_score(y_test, y_pred, average='macro', zero_division=0),
     'confusion_matrix': confusion_matrix(y_test, y_pred)
-    }, df_test
+    }
+    return metrics, df_test
 
 
 def predict_scores_labels(df_test, df_test_preprocessed, iso_forest, df_train=None):
+    df_test = df_test.copy()
     df_test['anomaly'] = pd.Series(iso_forest.predict(df_test_preprocessed)).replace({1: 0, -1: 1})
     df_test['anomaly_score'] = -iso_forest.decision_function(df_test_preprocessed)
 
-    if df_train:
+    if df_train is not None:
+        df_train = df_train.copy()
         df_train['anomaly'] = pd.Series(iso_forest.predict(df_test_preprocessed)).replace({1: 0, -1: 1})
         df_train['anomaly_score'] = -iso_forest.decision_function(df_test_preprocessed)
 
-    return df_train, df_test,
+    return df_train, df_test
 
 
 def analyze_anomalies(
@@ -112,7 +116,7 @@ def analyze_anomalies(
         threshold_anomaly_data_percentage=5.0,
         threshold_anomaly_score_percentile=95,
 ):
-    cluster_anomaly_rates = test_df.groupby('cluster')['anomaly'].apply(lambda x: (x == -1).mean())
+    cluster_anomaly_rates = test_df.groupby('predicted_cluster')['anomaly'].apply(lambda x: (x == -1).mean())
     most_anomalous_cluster = cluster_anomaly_rates.idxmax()
     threshold_score = np.percentile(test_df['anomaly_score'], threshold_anomaly_score_percentile)
 

@@ -146,7 +146,7 @@ if st.button("Predict"):
         f"\nAccuracy: {metrics['accuracy']:.2f}"
     )
 
-    df_test = predict_scores_labels(df_test, df_test_preprocessed, iso_forest)
+    df_train, df_test = predict_scores_labels(df_test, df_test_preprocessed, iso_forest)
 
     logger.info("Predictions made successfully.")
     st.write(f"Anomalies count in Test Data: {(df_test['anomaly'] == 1).sum()}")
