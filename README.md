@@ -5,34 +5,33 @@ It allows users to explore the data, view model predictions, and analyze anomali
 
 
 # Repository Structure
-_exploration/data_preparation.ipynb_
-This notebook contains the full preprocessing pipeline:
+_exploration/data_preparation.ipynb_: this notebook contains the full preprocessing pipeline:
 * Loading and combining SQL query logs and system metrics;
 * Data cleaning, aggregation, and resampling;
 * Dimensionality reduction using PCA;
 * Data visualization and exploratory data analysis (EDA);
 * Feature Engineering.
 
-_exploration/modeling_and_evaluation.ipynb_
-This notebook includes:
+_exploration/modeling_and_evaluation.ipynb_: this notebook includes:
 * Application of unsupervised clustering techniques (KMeans, DBSCAN, GMM, Birch, Agglomerative Clustering);
 * Application of classification models (SVM, Random Forest, Catboost);
 * Model comparison using silhouette score, F1-score, and visual interpretation;
 * Performance evaluation.
 
-_streamlit_anomaly_app_
-This directory contains the Streamlit application and its dependencies:
+_streamlit_anomaly_app_: this directory contains Streamlit application and its dependencies:
 * _app.py_: The main Streamlit application file that sets up the user interface and handles interactions;
 * _utils.py_: A utility module with helper functions for data processing, training, prediction and other common tasks;
 * _visualization_utils.py_: A utility module with helper functions for data visualization;
 * _data_: A directory containing sample data files used by the Streamlit app for demonstration purposes.
 * _models_: A directory containing pre-trained machine learning models used for anomaly detection;
+* _logger.py_: A module for logging application events and errors;
 * _dockerfile_: A Dockerfile to build a Docker image for the Streamlit app, allowing for easy deployment and sharing of the application;
 * _requirements.txt_: A file listing the Python packages required to run the Streamlit app. 
 
 ## streamlit_anomaly_app
 
-To build the application, start Docker app and in the repository root run the command in the terminal:
+To build the application, clone the repository and start Docker app.
+In the terminal in the repository root run the command:
 ```bash
 cd streamlit_anomaly_app
 docker build -t streamlit_anomaly_app .
