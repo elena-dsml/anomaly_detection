@@ -44,7 +44,7 @@ def load_pretrained_models():
     preprocessor = joblib.load("models/preprocessing_stage1.joblib")
     gmm = joblib.load("models/gmm_model.joblib")
     rf = joblib.load("models/random_forest.joblib")
-    iso_forest = joblib.load("models/models/isolation_forest.joblib")
+    iso_forest = joblib.load("models/isolation_forest.joblib")
 
     return preprocessor, iso_forest, gmm, rf
 
